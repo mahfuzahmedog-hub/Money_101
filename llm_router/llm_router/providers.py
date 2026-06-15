@@ -5,6 +5,7 @@ from core.db import get_connection
 from core.event_logger import log_event
 
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
+GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
 
 
 def call_gemini(prompt, model="gemini-2.5-flash", tier="standard"):
@@ -42,6 +43,43 @@ def call_gemini(prompt, model="gemini-2.5-flash", tier="standard"):
         return None, f"error: {e}"
 
 
+def call_groq(prompt, model="llama-3.3-70b-versatile", tier="standard"):
+    key = GROQ_API_KEY or os.environ.get("GROQ_API_KEY", "")
+    if not key:
+        return None, "no_groq_key"
+    url = "https://api.groq.com/openai/v1/chat/completions"
+    headers = {"Authorization": f"Bearer {key}", "Content-Type": "application/json"}
+    payload = {
+        "model": model,
+        "messages": [{"role": "user", "content": prompt}],
+    }
+    start = time.time()
+    try:
+        resp = httpx.post(url, json=payload, headers=headers, timeout=60)
+        latency = (time.time() - start) * 1000
+        if resp.status_code == 429:
+            return None, "rate_limited"
+        if resp.status_code != 200:
+            return None, f"http_{resp.status_code}"
+        data = resp.json()
+        text = data["choices"][0]["message"]["content"]
+        tokens = data.get("usage", {}).get("total_tokens", 0)
+        return {
+            "content": text,
+            "provider": "groq",
+            "model": model,
+            "tier": tier,
+            "tokens": tokens,
+            "cost_usd": 0.0,
+            "latency_ms": round(latency, 1),
+            "success": True,
+        }, None
+    except httpx.TimeoutException:
+        return None, "timeout"
+    except Exception as e:
+        return None, f"error: {e}"
+
+
 FREE_PROVIDERS = [
     {
         "name": "gemini",
@@ -60,6 +98,24 @@ FREE_PROVIDERS = [
         "tier": "priority",
         "priority_order": 2,
         "call_fn": call_gemini,
+    },
+    {
+        "name": "groq",
+        "model": "llama-3.3-70b-versatile",
+        "limit_type": "requests_per_day",
+        "limit_value": 14400,
+        "tier": "standard,bulk",
+        "priority_order": 3,
+        "call_fn": call_groq,
+    },
+    {
+        "name": "groq-fast",
+        "model": "llama-3.1-8b-instant",
+        "limit_type": "requests_per_day",
+        "limit_value": 14400,
+        "tier": "bulk",
+        "priority_order": 4,
+        "call_fn": call_groq,
     },
 ]
 
