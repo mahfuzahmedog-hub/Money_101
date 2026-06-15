@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Live Feed — Agent Dashboard</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, system-ui, monospace; background: #0d1117; color: #c9d1d9; padding: 20px; }
+nav a { color: #58a6ff; text-decoration: none; margin-right: 20px; font-weight: 600; }
+nav a:hover { text-decoration: underline; }
+nav { margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #30363d; }
+.event { background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 12px; margin-bottom: 8px; }
+.event .time { color: #8b949e; font-size: 0.85em; }
+.event .agent { color: #d2a8ff; }
+.event .type { color: #7ee787; font-weight: 600; }
+.event .fail .type { color: #f85149; }
+.event .pending .type { color: #d29922; }
+.event .summary { margin-top: 4px; }
+</style>
+</head>
+<body>
+<nav>
+  <a href="/live">Live Feed</a>
+  <a href="/financial">Financial</a>
+  <a href="/decisions">Decisions</a>
+</nav>
+<h1>Live Feed</h1>
+{% for e in events %}
+<div class="event {% if e.status == 'failure' %}fail{% elif e.status == 'pending' %}pending{% endif %}">
+  <div>
+    <span class="time">{{ e.timestamp }}</span>
+    <span class="agent">{{ e.agent_id }}</span>
+    <span class="type">{{ e.event_type }}</span>
+    <span>[{{ e.status }}]</span>
+  </div>
+  <div class="summary">{{ e.summary }}</div>
+  {% if e.cost_usd %}<div class="summary">Cost: ${{ "%.4f"|format(e.cost_usd) }}</div>{% endif %}
+</div>
+{% else %}
+<p>No events yet. Run the agent to populate the log.</p>
+{% endfor %}
+</body>
+</html>

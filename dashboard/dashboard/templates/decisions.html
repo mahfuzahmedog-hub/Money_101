@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Decisions — Agent Dashboard</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, system-ui, monospace; background: #0d1117; color: #c9d1d9; padding: 20px; }
+nav a { color: #58a6ff; text-decoration: none; margin-right: 20px; font-weight: 600; }
+nav a:hover { text-decoration: underline; }
+nav { margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #30363d; }
+h2 { margin: 20px 0 10px; }
+.card { background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 16px; margin-bottom: 12px; }
+.card .from { color: #d2a8ff; font-weight: 600; }
+.card .action { color: #58a6ff; }
+.card .status { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 0.85em; }
+.status-pending { background: #d2992222; color: #d29922; border: 1px solid #d29922; }
+.status-approved { background: #3fb95022; color: #3fb950; border: 1px solid #3fb950; }
+.status-rejected { background: #f8514922; color: #f85149; border: 1px solid #f85149; }
+</style>
+</head>
+<body>
+<nav>
+  <a href="/live">Live Feed</a>
+  <a href="/financial">Financial</a>
+  <a href="/decisions">Decisions</a>
+</nav>
+<h1>Decisions & Needs You</h1>
+
+<h2>Directives</h2>
+{% for d in directives %}
+<div class="card">
+  <div>
+    <span class="from">{{ d.from_agent }}</span>
+    <span class="action">{{ d.action }}</span>
+    <span class="status status-{{ d.status }}">{{ d.status }}</span>
+  </div>
+  <div>Type: {{ d.directive_type }}</div>
+  <div>{{ d.reason }}</div>
+  <div style="color:#8b949e;font-size:0.85em">{{ d.date }} | {{ d.model_used }}</div>
+</div>
+{% else %}
+<p>No directives yet.</p>
+{% endfor %}
+</body>
+</html>

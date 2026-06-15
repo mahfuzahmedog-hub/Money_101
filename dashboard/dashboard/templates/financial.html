@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Financial — Agent Dashboard</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, system-ui, monospace; background: #0d1117; color: #c9d1d9; padding: 20px; }
+nav a { color: #58a6ff; text-decoration: none; margin-right: 20px; font-weight: 600; }
+nav a:hover { text-decoration: underline; }
+nav { margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #30363d; }
+h2 { margin: 20px 0 10px; }
+table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
+th, td { text-align: left; padding: 8px; border-bottom: 1px solid #30363d; }
+th { color: #8b949e; }
+.income { color: #3fb950; }
+.expense { color: #f85149; }
+.card { background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 16px; margin-bottom: 12px; }
+</style>
+</head>
+<body>
+<nav>
+  <a href="/live">Live Feed</a>
+  <a href="/financial">Financial</a>
+  <a href="/decisions">Decisions</a>
+</nav>
+<h1>Financial Overview</h1>
+
+<h2>LLM Quota Status</h2>
+<table>
+<tr><th>Provider</th><th>Model</th><th>Limit/Day</th><th>Used Today</th><th>Tier</th></tr>
+{% for q in quota %}
+<tr>
+  <td>{{ q.provider }}</td>
+  <td>{{ q.model }}</td>
+  <td>{{ q.limit_value }}</td>
+  <td>{{ q.used_today }}</td>
+  <td>{{ q.tier }}</td>
+</tr>
+{% else %}
+<tr><td colspan="5">No quota data. Run seed_quota_ledger().</td></tr>
+{% endfor %}
+</table>
+
+<h2>Transactions</h2>
+<table>
+<tr><th>Date</th><th>Type</th><th>Amount</th><th>Source</th></tr>
+{% for t in transactions %}
+<tr>
+  <td>{{ t.date }}</td>
+  <td class="{{ t.type }}">{{ t.type }}</td>
+  <td>${{ "%.2f"|format(t.amount) }}</td>
+  <td>{{ t.source }}</td>
+</tr>
+{% else %}
+<tr><td colspan="4">No transactions yet.</td></tr>
+{% endfor %}
+</table>
+</body>
+</html>
