@@ -9,5 +9,6 @@ build/
 venv/
 screenshots/
 *.encrypted
+*.salt
 .DS_Store
 *.log
