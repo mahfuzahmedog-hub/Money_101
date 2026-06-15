@@ -6,6 +6,7 @@ from core.event_logger import log_event
 
 GEMINI_API_KEY = os.environ.get("GEMINI_API_KEY", "")
 GROQ_API_KEY = os.environ.get("GROQ_API_KEY", "")
+OPENROUTER_API_KEY = os.environ.get("OPENROUTER_API_KEY", "")
 
 
 def call_gemini(prompt, model="gemini-2.5-flash", tier="standard"):
@@ -80,6 +81,47 @@ def call_groq(prompt, model="llama-3.3-70b-versatile", tier="standard"):
         return None, f"error: {e}"
 
 
+def call_openrouter(prompt, model="meta-llama/llama-3.3-70b-instruct", tier="standard"):
+    key = OPENROUTER_API_KEY or os.environ.get("OPENROUTER_API_KEY", "")
+    if not key:
+        return None, "no_openrouter_key"
+    url = "https://openrouter.ai/api/v1/chat/completions"
+    headers = {
+        "Authorization": f"Bearer {key}",
+        "Content-Type": "application/json",
+        "HTTP-Referer": "https://github.com/mahfuzahmedog-hub/Money_101",
+    }
+    payload = {
+        "model": model,
+        "messages": [{"role": "user", "content": prompt}],
+    }
+    start = time.time()
+    try:
+        resp = httpx.post(url, json=payload, headers=headers, timeout=60)
+        latency = (time.time() - start) * 1000
+        if resp.status_code == 429:
+            return None, "rate_limited"
+        if resp.status_code != 200:
+            return None, f"http_{resp.status_code}"
+        data = resp.json()
+        text = data["choices"][0]["message"]["content"]
+        tokens = data.get("usage", {}).get("total_tokens", 0)
+        return {
+            "content": text,
+            "provider": "openrouter",
+            "model": model,
+            "tier": tier,
+            "tokens": tokens,
+            "cost_usd": 0.0,
+            "latency_ms": round(latency, 1),
+            "success": True,
+        }, None
+    except httpx.TimeoutException:
+        return None, "timeout"
+    except Exception as e:
+        return None, f"error: {e}"
+
+
 FREE_PROVIDERS = [
     {
         "name": "gemini",
@@ -116,6 +158,33 @@ FREE_PROVIDERS = [
         "tier": "bulk",
         "priority_order": 4,
         "call_fn": call_groq,
+    },
+    {
+        "name": "openrouter-llama",
+        "model": "meta-llama/llama-3.3-70b-instruct:free",
+        "limit_type": "requests_per_day",
+        "limit_value": 200,
+        "tier": "standard,priority",
+        "priority_order": 5,
+        "call_fn": call_openrouter,
+    },
+    {
+        "name": "openrouter-gemma",
+        "model": "google/gemma-4-31b-it:free",
+        "limit_type": "requests_per_day",
+        "limit_value": 200,
+        "tier": "standard,bulk",
+        "priority_order": 6,
+        "call_fn": call_openrouter,
+    },
+    {
+        "name": "openrouter-qwen",
+        "model": "qwen/qwen3-coder:free",
+        "limit_type": "requests_per_day",
+        "limit_value": 200,
+        "tier": "bulk",
+        "priority_order": 7,
+        "call_fn": call_openrouter,
     },
 ]
 

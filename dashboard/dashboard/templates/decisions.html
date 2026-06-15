@@ -10,23 +10,39 @@ body { font-family: -apple-system, system-ui, monospace; background: #0d1117; co
 nav a { color: #58a6ff; text-decoration: none; margin-right: 20px; font-weight: 600; }
 nav a:hover { text-decoration: underline; }
 nav { margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #30363d; }
-h2 { margin: 20px 0 10px; }
+h1, h2 { margin: 20px 0 10px; }
 .card { background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 16px; margin-bottom: 12px; }
 .card .from { color: #d2a8ff; font-weight: 600; }
 .card .action { color: #58a6ff; }
-.card .status { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 0.85em; }
+.status { display: inline-block; padding: 2px 8px; border-radius: 12px; font-size: 0.85em; }
 .status-pending { background: #d2992222; color: #d29922; border: 1px solid #d29922; }
 .status-approved { background: #3fb95022; color: #3fb950; border: 1px solid #3fb950; }
 .status-rejected { background: #f8514922; color: #f85149; border: 1px solid #f85149; }
+
+.handoff-card { background: #3d1f0022; border: 2px solid #d29922; border-radius: 8px; padding: 16px; margin-bottom: 16px; }
+.handoff-card h3 { color: #d29922; }
+.handoff-card .detail { white-space: pre-wrap; margin: 8px 0; }
 </style>
 </head>
 <body>
 <nav>
   <a href="/live">Live Feed</a>
   <a href="/financial">Financial</a>
-  <a href="/decisions">Decisions</a>
+  <a href="/decisions">Decisions & Needs You</a>
 </nav>
+
 <h1>Decisions & Needs You</h1>
+
+{% if handoffs %}
+<h2 style="color:#d29922">⚠️ Needs You — Handoffs</h2>
+{% for h in handoffs %}
+<div class="handoff-card">
+  <h3>{{ h.summary }}</h3>
+  <div class="detail">{{ h.detail }}</div>
+  <div style="color:#8b949e;font-size:0.85em">{{ h.timestamp }} | {{ h.agent_id }}</div>
+</div>
+{% endfor %}
+{% endif %}
 
 <h2>Directives</h2>
 {% for d in directives %}

@@ -10,22 +10,45 @@ body { font-family: -apple-system, system-ui, monospace; background: #0d1117; co
 nav a { color: #58a6ff; text-decoration: none; margin-right: 20px; font-weight: 600; }
 nav a:hover { text-decoration: underline; }
 nav { margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #30363d; }
+h1, h2 { margin-bottom: 12px; }
+
+.handoff-banner { background: #d2992222; border: 2px solid #d29922; border-radius: 8px; padding: 16px; margin-bottom: 20px; }
+.handoff-banner h2 { color: #d29922; margin: 0 0 8px 0; }
+.handoff-banner .instructions { color: #c9d1d9; margin: 4px 0; white-space: pre-wrap; }
+
 .event { background: #161b22; border: 1px solid #30363d; border-radius: 6px; padding: 12px; margin-bottom: 8px; }
 .event .time { color: #8b949e; font-size: 0.85em; }
 .event .agent { color: #d2a8ff; }
 .event .type { color: #7ee787; font-weight: 600; }
-.event .fail .type { color: #f85149; }
-.event .pending .type { color: #d29922; }
+.event.fail .type { color: #f85149; }
+.event.pending .type { color: #d29922; }
 .event .summary { margin-top: 4px; }
+
+.screenshot-link { color: #58a6ff; font-size: 0.85em; cursor: pointer; }
+.screenshot-img { max-width: 100%; border: 1px solid #30363d; border-radius: 4px; margin-top: 8px; display: none; }
 </style>
 </head>
 <body>
 <nav>
   <a href="/live">Live Feed</a>
   <a href="/financial">Financial</a>
-  <a href="/decisions">Decisions</a>
+  <a href="/decisions">Decisions & Needs You</a>
 </nav>
+
 <h1>Live Feed</h1>
+
+{% if handoffs %}
+<div class="handoff-banner">
+  <h2>⚠️ HUMAN HELP NEEDED</h2>
+  {% for h in handoffs %}
+  <div class="instructions">{{ h.summary }}</div>
+  {% if h.detail %}
+  <div class="instructions">{{ h.detail }}</div>
+  {% endif %}
+  {% endfor %}
+</div>
+{% endif %}
+
 {% for e in events %}
 <div class="event {% if e.status == 'failure' %}fail{% elif e.status == 'pending' %}pending{% endif %}">
   <div>
@@ -35,10 +58,24 @@ nav { margin-bottom: 20px; padding-bottom: 10px; border-bottom: 1px solid #30363
     <span>[{{ e.status }}]</span>
   </div>
   <div class="summary">{{ e.summary }}</div>
-  {% if e.cost_usd %}<div class="summary">Cost: ${{ "%.4f"|format(e.cost_usd) }}</div>{% endif %}
+  {% if e.cost_usd %}<div>Cost: ${{ "%.4f"|format(e.cost_usd) }}</div>{% endif %}
+  {% if e.detail %}
+    {% set detail = e.detail %}
+    {% if detail is mapping and detail.get('screenshot') %}
+      <div class="screenshot-link" onclick="toggleScreenshot('ss_{{ e.id }}')">📷 View Screenshot</div>
+      <img id="ss_{{ e.id }}" class="screenshot-img" src="/screenshots/{{ detail['screenshot'].split('/')[-1] }}" />
+    {% endif %}
+  {% endif %}
 </div>
 {% else %}
 <p>No events yet. Run the agent to populate the log.</p>
 {% endfor %}
+
+<script>
+function toggleScreenshot(id) {
+  const img = document.getElementById(id);
+  img.style.display = img.style.display === 'none' || img.style.display === '' ? 'block' : 'none';
+}
+</script>
 </body>
 </html>

@@ -1,6 +1,5 @@
 from core.event_logger import log_event
 from core.db import get_connection, DB_PATH
-from core.types import Outcome
 from llm_router.router import call_llm
 
 
@@ -33,7 +32,7 @@ def build_listings(db_path=None):
         result = call_llm(prompt, tier="priority", db_path=db_path)
         if result and result.get("content"):
             listing = result["content"]
-            oc = Outcome(
+            oc = dict(
                 task_type="gig_listing",
                 platform="fiverr",
                 niche=candidate["niche"],
@@ -59,7 +58,7 @@ def save_outcomes(outcomes, db_path=None):
         conn.execute(
             """INSERT INTO outcomes (task_type, platform, niche, price, content_summary, posting_time, llm_tier_used)
                VALUES (?, ?, ?, ?, ?, datetime('now'), ?)""",
-            (oc.task_type, oc.platform, oc.niche, oc.price, oc.content_summary, oc.llm_tier_used),
+            (oc["task_type"], oc["platform"], oc["niche"], oc["price"], oc["content_summary"], oc["llm_tier_used"]),
         )
     conn.commit()
     conn.close()
